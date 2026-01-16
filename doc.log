@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2026/dev/Arch Linux) (preloaded format=xelatex 2026.1.4)  16 JAN 2026 12:33
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2026/dev/Arch Linux) (preloaded format=xelatex 2026.1.4)  16 JAN 2026 14:22
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1005,6 +1005,9 @@ Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
 Package amssymb Warning: The 'amssymb' package is redundant when you are using 
 the 'stix' package, so I'm not going to load amssymb.
 
+) (/usr/share/texmf-dist/tex/latex/seqsplit/seqsplit.sty
+Package: seqsplit 2006/08/07 v0.1 Splitting long sequences (DNA, RNA, proteins,
+ etc.) 
 )
 
 Package fontspec Info: 
@@ -1039,52 +1042,53 @@ text;"
 (fontspec)             <->"Calibri/BI/OT:script=latn;language=dflt;+smcp;mappin
 g=tex-text;"
 
-Package hyperref Info: Option `colorlinks' set `true' on input line 44.
+Package hyperref Info: Option `colorlinks' set `true' on input line 45.
  (./doc.aux)
 \openout1 = `doc.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for LS1/stix/m/n on input line 109.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for LS1/stix/m/n on input line 110.
 LaTeX Font Info:    Trying to load font information for LS1+stix on input line 
-109.
- (/usr/share/texmf-dist/tex/latex/stix/ls1stix.fd
+110.
+
+(/usr/share/texmf-dist/tex/latex/stix/ls1stix.fd
 File: ls1stix.fd 2015/04/17 v1.1.2-latex STIX LS1 font definitions
 )
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for LS2/stix/m/n on input line 109.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for LS2/stix/m/n on input line 110.
 LaTeX Font Info:    Trying to load font information for LS2+stix on input line 
-109.
+110.
 
 (/usr/share/texmf-dist/tex/latex/stix/ls2stix.fd
 File: ls2stix.fd 2015/04/17 v1.1.2-latex STIX LS2 font definitions
 )
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 109.
-LaTeX Font Info:    ... okay on input line 109.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 110.
+LaTeX Font Info:    ... okay on input line 110.
 Package french.ldf Info: Setting StandardItemizeEnv=true for
 (french.ldf)             compatibility with enumitem package,
-(french.ldf)             reported on input line 109.
+(french.ldf)             reported on input line 110.
 Package french.ldf Info: Setting StandardEnumerateEnv=true for
 (french.ldf)             compatibility with enumitem package,
-(french.ldf)             reported on input line 109.
-LaTeX Info: Redefining \up on input line 109.
+(french.ldf)             reported on input line 110.
+LaTeX Info: Redefining \up on input line 110.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
@@ -1121,68 +1125,68 @@ LaTeX Info: Redefining \up on input line 109.
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
 \c@lstlisting=\count386
-Package hyperref Info: Link coloring ON on input line 109.
+Package hyperref Info: Link coloring ON on input line 110.
 (./doc.out) (./doc.out)
 \@outlinefile=\write5
 \openout5 = `doc.out'.
 
-LaTeX Info: Command `\dddot' is already robust on input line 109.
-LaTeX Info: Command `\ddddot' is already robust on input line 109.
+LaTeX Info: Command `\dddot' is already robust on input line 110.
+LaTeX Info: Command `\ddddot' is already robust on input line 110.
 File: ../../../../../../Format/logo-UT-site.png Graphic file (type bmp)
 <../../../../../../Format/logo-UT-site.png>
 LaTeX Font Info:    Trying to load font information for LS1+stixscr on input li
-ne 111.
+ne 112.
  (/usr/share/texmf-dist/tex/latex/stix/ls1stixscr.fd
 File: ls1stixscr.fd 2015/04/17 v1.1.2-latex STIX script LS1 font definitions
 )
 LaTeX Font Info:    Trying to load font information for LS2+stixex on input lin
-e 111.
+e 112.
 
 (/usr/share/texmf-dist/tex/latex/stix/ls2stixex.fd
 File: ls2stixex.fd 2015/04/17 v1.1.2-latex STIX extentions LS2 font definitions
 
 )
 LaTeX Font Info:    Trying to load font information for LS1+stixfrak on input l
-ine 111.
+ine 112.
 
 (/usr/share/texmf-dist/tex/latex/stix/ls1stixfrak.fd
 File: ls1stixfrak.fd 2015/04/17 v1.1.2-latex STIX fraktur LS1 font definitions
 )
 LaTeX Font Info:    Trying to load font information for LS1+stixbb on input lin
-e 111.
+e 112.
 
 (/usr/share/texmf-dist/tex/latex/stix/ls1stixbb.fd
 File: ls1stixbb.fd 2015/04/17 v1.1.2-latex STIX blackboard LS1 font definitions
 
 )
 LaTeX Font Info:    Trying to load font information for LS2+stixcal on input li
-ne 111.
+ne 112.
 
 (/usr/share/texmf-dist/tex/latex/stix/ls2stixcal.fd
 File: ls2stixcal.fd 2015/04/17 v1.1.2-latex STIX calligraphic LS2 font definiti
 ons
 )
 LaTeX Font Info:    Trying to load font information for LS1+stixsf on input lin
-e 111.
+e 112.
 
 (/usr/share/texmf-dist/tex/latex/stix/ls1stixsf.fd
 File: ls1stixsf.fd 2015/04/17 v1.1.2-latex STIX sans-serif LS1 font definitions
 
 )
 LaTeX Font Info:    Trying to load font information for LS2+stixtt on input lin
-e 111.
+e 112.
 
 (/usr/share/texmf-dist/tex/latex/stix/ls2stixtt.fd
 File: ls2stixtt.fd 2015/04/17 v1.1.2-latex STIX typewriter LS2 font definitions
 
 )
-LaTeX Font Info:    Trying to load font information for U+msa on input line 111
+LaTeX Font Info:    Trying to load font information for U+msa on input line 112
 .
 
 (/usr/share/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 111
+LaTeX Font Info:    Trying to load font information for U+msb on input line 112
 .
 
 (/usr/share/texmf-dist/tex/latex/amsfonts/umsb.fd
@@ -1210,14 +1214,14 @@ File: lstlang1.sty 2024/09/23 1.10c listings language file
 File: lstlang1.sty 2024/09/23 1.10c listings language file
 )
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
-nput line 169.
+nput line 170.
 
 
 [3
 
 ]
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <9> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 189.
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 190.
 
 
 [4]
@@ -1229,7 +1233,7 @@ Chapitre II.
 ]
 
 [6]
-Overfull \hbox (33.78896pt too wide) in paragraph at lines 340--342
+Overfull \hbox (33.78896pt too wide) in paragraph at lines 341--343
 []\TU/Calibri(0)/m/n/10 Il faut maintenant attendre car l’installation nécessit
 e quelques minutes. On peut vérifier avec []\TU/lmtt/m/n/10 kubectl[]get[]pods[
 ]-n[]cattle-system 
@@ -1254,7 +1258,7 @@ Chapitre IV.
 [10]
 Chapitre V.
 
-Overfull \hbox (9.72385pt too wide) in paragraph at lines 496--497
+Overfull \hbox (9.72385pt too wide) in paragraph at lines 497--498
 []\TU/Calibri(0)/m/n/10 Durant cette phase, nous devons la déployer avec Kubern
 etes, ce qui nécessite d’utiliser une spécification des ressources différentes
  []
@@ -1265,6 +1269,16 @@ etes, ce qui nécessite d’utiliser une spécification des ressources différen
 
 ]
 Chapitre VI.
+
+Underfull \hbox (badness 10000) in paragraph at lines 540--541
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 542--543
+
+ []
+
 
 
 [12
@@ -1278,25 +1292,28 @@ Chapitre VI.
 [15]
 
 [16]
-Overfull \hbox (32.51044pt too wide) in paragraph at lines 824--825
-[]\TU/Calibri(0)/m/n/10 Certificates : Secret Name, on déroule et sélectionne c
-elui créé précédemment et met comme Domain Name : nailloux.registry.com 
+
+[17]
+
+[18]
+Underfull \hbox (badness 10000) in paragraph at lines 1022--1022
+[]|\TU/Calibri(0)/m/n/10 Certificats :
  []
 
 
 
-[17]
+[19]
 Chapitre VII.
 File: trusted-ca.png Graphic file (type bmp)
 <trusted-ca.png>
 
 
-[18
+[20
 
 ]
 
-[19]
-runsystem(latexminted cleantemp  --timestamp 20260116123301 9A09B4DFDA82E3E665E
+[21]
+runsystem(latexminted cleantemp  --timestamp 20260116142210 9A09B4DFDA82E3E665E
 31092D1C3EC8D)...executed safely (allowed).
 
  (./doc.aux)
@@ -1305,15 +1322,15 @@ LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
 Package rerunfilecheck Info: File `doc.out' has not changed.
-(rerunfilecheck)             Checksum: 6789A2BDD87211CA9F705822B5630879;10500.
+(rerunfilecheck)             Checksum: 06D843DD4DF411A235EC9FAC9618E773;10511.
  ) 
 Here is how much of TeX's memory you used:
- 35723 strings out of 475874
- 729793 string characters out of 5776791
- 1647973 words of memory out of 5000000
- 58090 multiletter control sequences out of 15000+600000
+ 35773 strings out of 475874
+ 730835 string characters out of 5776791
+ 1648185 words of memory out of 5000000
+ 58136 multiletter control sequences out of 15000+600000
  596801 words of font info for 137 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 95i,11n,101p,481b,1909s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 95i,12n,101p,481b,1909s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on doc.pdf (20 pages).
+Output written on doc.pdf (22 pages).

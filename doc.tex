@@ -22,6 +22,7 @@
 \usepackage{tabularx}
 \usepackage{float}
 \usepackage{amsmath, amssymb}
+\usepackage{seqsplit}
 
 \setmainfont{Calibri}
 
@@ -528,42 +529,61 @@
 	
 	\chapter{Déploiement de composants annexes}
 	
-	Dans le même temps que le déploiement de l'application du club photo nailloux, l'infrastructure de l'entreprise nécessite d'autres services, qui seront détaillés et déployés ici.
+	Dans le même temps que le déploiement de l'application du club photo nailloux, l'infrastructure de l'entreprise nécessite d'autres services, qui seront détaillés et déployés ici, afin de répondre aux besoins de développement par exemple.
 	
-	En particulier un Gitlab et un Registre Docker.
+	Dans cette section nous verrons comment déployer Gitlab, Gitlab-Runner, un Docker Registry et tout cela via Kubernetes et le cluster RKE2.
 	
 	\section{Gitlab}
 	
 	\subsection{Phase 1: Creation des volumes}
 	
-	Dans la continuité des volumes docker, il existe ce qu'on appelle les \textbf{Persistent Volume Claims}.
-	\begin{itemize}
-	\item gitlab-etc	2Gi	/etc/gitlab	Configuration (gitlab.rb)
-	\item gitlab-opt	20Gi+	/var/opt/gitlab	Database and Git Repositories
-	\item gitlab-log	5Gi	/var/log/gitlab	Logs
-	\end{itemize}
+	Comme vu plus haut, dans Kubernetes il existe ce qu'on appelle des \textbf{Persistent Volume Claims}, qui ont pour vocation de se substituer aux volumes docker.\\
+	
+	Néanmoins, ils possèdent quelques spécificités que n'ont pas les volumes docker, notamment que le volume docker monte un dossier hôte vers le conteneur alors que les volumes Kubernetes, sont initialisés totalement vides.\\
+	
+	Donc là où Docker permettait d'avoir des volumes avec des fichiers, Kubernetes ne permet pas cela.
+	
+	\begin{table}[H]
+		\begin{adjustwidth}{0cm}{0cm}
+			\centering
+			\begin{tabularx}{18cm}{|X|X|X|c|}
+				\hline
+				\cellcolor{gray!30}  Volume & 
+				\cellcolor{gray!30}  Taille &
+				\cellcolor{gray!30}  Point de montage&
+				\cellcolor{gray!30}  Rôle\\
+				\hline
+				gitlab-etc & 2Gi & /etc/gitlab & Configuration \\
+				\hline
+				gitlab-opt & 20Gi & /var/opt/gitlab & Données de fonctionnement Gitlab \\
+				\hline
+				gitlab-log & 5Gi & /var/log/gitlab & Fichiers de journalisation\\
+				\hline
+			\end{tabularx}
+		\end{adjustwidth}
+	\end{table}
 		
 	\subsection{Phase 2: Creation de la ConfigMap}
 	
-	Pour définir le nom de domaine qu'on va utiliser pour accéder au serveur Gitlab, on créé une \textbf{ConfigMap} avec la procédure suivante:
+	Pour définir le nom de domaine qu'on va utiliser pour accéder au serveur Gitlab, ainsi que d'autres paramètres, on créé une \textbf{ConfigMap} avec la procédure suivante:
 	
-	Dans Rancher: Cluster $\rightarrow$ Resources $\rightarrow$ ConfigMaps.
+	$\bullet$ Cluster $\rightarrow$ Resources $\rightarrow$ ConfigMaps.
 	
-	On créé une nouvelle configuration nommée \textbf{gitlab-config}.
-	On définit une clé \textbf{gitlab.rb} avec comme valeur:
+	On créé une nouvelle configuration nommée \textbf{gitlab-config} et on définit une clé \textbf{gitlab.rb} avec comme valeur:
 	\begin{lstlisting}[language=Bash,caption={}]
 	external_url 'http://nailloux.gitlab.com'
 	gitlab_rails['time_zone'] = 'Europe/Paris'
-	#gitlab_rails['initial_root_password'] = "qJHiA@wwaagi46U"
 	\end{lstlisting}
 	
-
+	Ce fichier sera utilisé par gitlab au moment de son initialisation.
 	
 	\subsection{Phase 3: Deploiement des pods}
 	
-	Dans la section Workloads -> Deployment on créé un Déploiement comme ceci
+	Dans la section $\bullet$ Workloads -> Deployment on créé un Déploiement comme suivant:
 	
 	\subsubsection{Variables d'environnments}
+	
+	On peut aussi passer des paramètres via les variables d'environnements avec
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	GITLAB_ROOT_EMAIL="admin@example.com" GITLAB_ROOT_PASSWORD="strongpassword"
@@ -571,41 +591,89 @@
 	
 	\subsubsection{Conteneur}
 	
-	Nom: Gitlab
-	
-	    Docker Image: gitlab/gitlab-ce:latest
+	\begin{table}[H]
+		\begin{adjustwidth}{0cm}{0cm}
+			\centering
+			\begin{tabularx}{18cm}{|X|X|}
+				\hline
+				\cellcolor{gray!30} Nom  & 
+				\cellcolor{gray!30} Image\\
+				\hline
+				Gitlab & gitlab/gitlab-ce:latest\\
+				\hline
+				
+			\end{tabularx}
+		\end{adjustwidth}
+	\end{table}
 	
 	\subsubsection{Ouverture de ports}
 	
-	Il faut ensuite ouvrir des ports, qui impliqueront la création d'un service.
+	Il faut ensuite ouvrir des ports, qui impliqueront la création d'un service, en l'occurence ClusterIP et NodePort.
 	
-	\begin{itemize}
-	\item ClusterIP, http, Port 80
-	\item ClusterIP, ssh, 22
-	\item ClusterIP, ssh2, 2222
-	\end{itemize}	
+	\begin{table}[H]
+		\begin{adjustwidth}{0cm}{0cm}
+			\centering
+			\begin{tabularx}{18cm}{|X|X|X|X|}
+				\hline
+				\cellcolor{gray!30} Type  & 
+				\cellcolor{gray!30} Nom &
+				\cellcolor{gray!30} Port &
+				\cellcolor{gray!30} Protocole \\
+				\hline
+				ClusterIP & http & 80 & TCP\\
+				\hline
+				NodePort & ssh & 22:22 & TCP\\
+				\hline
+				
+			\end{tabularx}
+		\end{adjustwidth}
+	\end{table}
 	
 	\subsubsection{Storage (Volume Mounts)}
 	Il faut ensuite monter les volumes créés et la ConfigMap donc les pods.
 	
-	\begin{itemize}
-	\item PVC gitlab-etc → /etc/gitlab
-	\item PVC gitlab-opt → /var/opt/gitlab
-	\item PVC gitlab-log → /var/log/gitlab
-	\item ConfigMap gitlab-config → Key gitlab.rb mounted to /etc/gitlab/gitlab.rb
-	\end{itemize}
+	\begin{table}[H]
+		\begin{adjustwidth}{0cm}{0cm}
+			\centering
+			\begin{tabularx}{18cm}{|X|X|X|}
+				\hline
+				\cellcolor{gray!30}  Volume & 
+				\cellcolor{gray!30}  Type &
+				\cellcolor{gray!30}  Point de montage\\
+				\hline
+				gitlab-etc & PVC & /etc/gitlab \\
+				\hline
+				gitlab-opt & PVC & /var/opt/gitlab \\
+				\hline
+				gitlab-log & PVC & /var/log/gitlab\\
+				\hline
+				gitlab-config & ConfigMap & /etc/gitlab/gitlab.rb\\
+				\hline
+				
+			\end{tabularx}
+		\end{adjustwidth}
+	\end{table}
 	
 	\subsubsection{Security Context}
 	
-	Il faut savoir que Rancher par défaut, cloisonne l'utilisateur chargé de lancer le service. Cela mène à plusieurs problèmes de permissions si le service nécessite de lire des fichiers protégés.
+	Il faut savoir que Rancher, par défaut, cloisonne l'utilisateur chargé de lancer le service. Cela mène à plusieurs problèmes de permissions si le service nécessite de lire des fichiers protégés.
 	
 	C'est le cas ici avec Gitlab.
 	Dans la section Security Context, il faut donc modifier les paramètres suivantes
 	
-	\begin{itemize}
-	\item Privileged: True
-	\item Run as User: 0 (Root)
-	\end{itemize}
+	\begin{table}[H]
+		\begin{adjustwidth}{0cm}{0cm}
+			\centering
+			\begin{tabularx}{18cm}{|X|X|}
+				\hline
+				\cellcolor{gray!30} Privileged & 
+				\cellcolor{gray!30} Run as User\\
+				\hline
+				True & 0 (Root)\\
+				\hline				
+			\end{tabularx}
+		\end{adjustwidth}
+	\end{table}
 		
 	\subsection{Phase 4: Attente}
 	
@@ -619,26 +687,24 @@
 	\end{lstlisting}
 	
 	\subsection{Phase 5:  Création d'une redirection de paquets avec un Ingress}
-		
-	    Dans Service Discovery > Ingresses.
 	
-	    Create
+	Dans $\bullet$ Service Discovery $\rightarrow$ Ingresses $\rightarrow$ Create:
 	
-	    Host: nailloux.gitlab.com
+	\begin{itemize}
+	\item Host: nailloux.gitlab.com
+	\item Path: / → Service: gitlab → Port: 80.
+	\end{itemize}
 	
-	    Path: / → Service: gitlab → Port: 80.
-	    
-	    On peut définir le HTTPS pour l'Ingress dans la section Certificates en ajoutant un.
+	On peut définir le HTTPS pour l'Ingress dans la section Certificates en ajoutant un.
+	
+	On ajoute un certificat en créant un Secret de type kubernetes.io/tls avec une clé tls.key et tls.crt contenant respectivement en base64 la clé et le certificat.
 	
 	\subsection{Phase 6: Récupération du mot de passe}
 	
 	Une fois que le serveur Gitlab est lancé, (environ 5 minutes), on peut récupérer le mot de passe généré par défaut comme ceci:
 	
 	\begin{lstlisting}[language=,caption={}]
-	root@k8sc2:~# kubectl get pods
-	NAME                      READY   STATUS    RESTARTS   AGE
-	gitlab-54d7466479-vcd9w   1/1     Running   0          18m
-	root@k8sc2:~# kubectl exec gitlab-54d7466479-vcd9w -- cat /etc/gitlab/initial_root_password
+	kubectl exec gitlab-54d7466479-vcd9w -- cat /etc/gitlab/initial_root_password
 	# WARNING: This password is only valid if ALL of the following are true:
 	#          • You set it manually via the GITLAB_ROOT_PASSWORD environment variable
 	#            OR the gitlab_rails['initial_root_password'] setting in /etc/gitlab/gitlab.rb
@@ -658,10 +724,13 @@
 	kubectl exec -it gitlab-54d7466479-vcd9w -- bash
 	\end{lstlisting}
 	
+	Vous venez donc d'installer et de déployer une application Gitlab.
+	
 	\section{Gitlab avec Helm}
 	
-	Dans cette section nous verrons comment installer gitlab avec helm.
+	Précédemment, a été évoqué l'installation manuelle de Gitlab avec des manifests. Cependant, cette installation s'est révélée complexe et propice aux erreurs. A donc été prise comme décision d'utiliser Helm pour installer Gitlab, qui a été de suite plus efficace et moins complexe.
 	
+	Tout d'abord a été définie un fichier values.yaml, qui est utilisée pour spécifier des paramètres à Helm lors de l'installation d'un paquet.
 	
 	\begin{lstlisting}[language=Bash,caption={values.yaml}]
 	global:
@@ -695,6 +764,8 @@
 	        memory: 8Gi
 	\end{lstlisting}
 	
+	Une fois le fichier créé, on peut exécuter les commandes suivantes pour récupérer Gitlab et l'installer sur le namespace gitlab.
+	
 	\begin{lstlisting}[language=Bash,caption={}]
 	helm repo add gitlab https://charts.gitlab.io/
 	
@@ -709,19 +780,114 @@
 	  -f values.yaml
 	\end{lstlisting}
 	
-	Pour récupérer le mot de passe:
+	Une fois l'installation faite, on récupère le mot  de passe dans le secret associé.
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	kubectl get secret <name>-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 --decode ; echo
 	\end{lstlisting}
+	
+	On remarque donc que l'installation de gitlab via Helm est plus simple, mais aussi plus complète.
 	 
 	\section{Gitlab runner}
-	 
-	Afin de pouvoir exécuter la pipeline CI/CD il faut installer ce qu'on appelle un runner, un processus capable d'exécuter les jobs.
-	 
-	Nous allons utiliser le gestionnaire de paquets kubernetes \textbf{helm}.
 	
-	Il faut d'ailleurs créer un fichier values.yaml.
+	Maintenant que nous avons installé Gitlab et afin de pouvoir exécuter la pipeline CI/CD, il faut installer ce qu'on appelle un runner, un processus capable d'exécuter les jobs Gitlab.
+	 
+	Nous allons utiliser, (encore), le gestionnaire de paquets Helm.
+	
+	Il faut d'ailleurs aussi créer un fichier values.yaml.
+	
+	\begin{lstlisting}[language=Bash,caption={values.yaml}]
+	image:
+	  registry: registry.gitlab.com
+	  image: gitlab-org/gitlab-runner
+	
+	imagePullPolicy: IfNotPresent
+	useTini: false
+	unregisterRunners: true
+	terminationGracePeriodSeconds: 3600
+	
+	concurrent: 10
+	
+	shutdown_timeout: 0
+	
+	checkInterval: 3
+	
+	logLevel: debug
+	
+	gitlabUrl: https://nailloux.gitlab.com  # Use your Proxy/GitLab URL
+	#secret: gitlab-runner-token             # The secret we created in Step 2
+	
+	runnerToken: "glrt-_amtT5NiPBnvwO7U6niGBG86MQpwOjEKdDozCnU6MQ8.01.170ht4ipd"
+	unregisterRunners: false
+	
+	rbac:
+	  create: true                     # Allows the runner to create job Pods
+	
+	
+	certsSecretName: gitlab-runner-crt
+	
+	## Ensure the Manager has permission to read the mounted secret
+	securityContext:
+	  fsGroup: 65533 
+	
+	runners:
+	  config: |
+	    [[runners]]
+	      # This path is where the Helm chart automatically mounts 'certsSecretName'
+	      tls-ca-file = "/home/gitlab-runner/.gitlab-runner/certs/nailloux.gitlab.com.crt"
+	      clone_url = "https://nailloux.gitlab.com"
+	      
+	      [runners.kubernetes]
+	        namespace = "gitlab-runner"
+	        image = "debian:latest"
+	        privileged = true
+	
+	        # Request more memory for the build pod
+	        memory_limit = "4Gi"
+	        memory_request = "2Gi"
+	        # CPU can also affect build speed/stability
+	        cpu_limit = "2"
+	        cpu_request = "1"
+	        
+	        # If the error persists, increase the helper memory too
+	        helper_memory_limit = "1Gi"
+	        
+	        # Injects the CA into the build pod's trust store
+	        ca_certificates_injection = true
+	
+	        # --- MOUNT FOR THE BUILD CONTAINER ---
+	        # [[runners.kubernetes.volumes.secret]]
+	        #   name = "gitlab-runner-crt"
+	        #   mount_path = "/etc/ssl/certs"
+	        #   read_only = true
+	        #   # 420 is octal 0644 (readable by all)
+	        #   [runners.kubernetes.volumes.secret.items]
+	        #     "nailloux.gitlab.com.crt" = "420"
+	
+	        #   [[runners.kubernetes.volumes.empty_dir]]
+	        #     name = "docker-certs"
+	        #     mount_path = "/certs/client"
+	        #     medium = "Memory"
+	
+	      # 3. Force Git to use this specific file
+	      [[runners.kubernetes.env]]
+	        name = "GIT_SSL_CAINFO"
+	        value = "/etc/ssl/certs/nailloux.gitlab.com.crt"
+	      [[runners.kubernetes.env]]
+	        name = "DOCKER_HOST"
+	        value = "tcp://docker:2375"
+	      [[runners.kubernetes.env]]
+	        name = "DOCKER_TLS_CERTDIR"
+	        value = ""
+	      [[runners.kubernetes.env]]
+	        name = "DOCKER_TLS_VERIFY"
+	        value = "0"
+	      [[runners.kubernetes.env]]
+	        name = "DOCKER_CERT_PATH"
+	        value = ""
+	\end{lstlisting}
+	
+	Et on installe le runner avec la commande associée
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	kubectl create namespace gitlab-runner
@@ -743,12 +909,18 @@
 	
 	\section{LoadBalancer avec MetalLB}
 	
+	Cette partie est optionnelle car elle sera effectuée seulement si nous disposons du temps nécessaire.
+	
+	Cela n'a pas été le cas durant la SAE.
+	
 	\begin{lstlisting}[language=Bash,caption={}]
 	helm repo add metallb https://metallb.github.io/metallb
 	helm install metallb metallb/metallb
 	\end{lstlisting}
 	
 	\section{Docker Registry}
+	
+	Dans le cadre du déploiement de notre application, nous utilisons des Dockerfile pour créer des images personnalisées chargées de copier des fichiers hôtes. Plutôt que d'utiliser DockerHub, nous avons décidé d'utiliser un registre docker personnel.
 	
 	Le serveur gitlab possède déjà une option pour disposer d'un serveur Docker Registry mais on ne va pas utiliser cette méthode ici.
 	
@@ -785,14 +957,29 @@
 
 	Sera ensuite exposé le port 5000 en tcp, avec un service ClusterIP, nommé https.
 	    
-	\subsection{UI}
+	\subsection{Phase 3 : UI}
 	Afin d'interfacer proprement notre serveur Docker-Registry, nous allons faire appel à une autre image docker \textbf{joxit/docker-registry-ui} qui implique un nouveau déploiement chargé d'afficher une UI.
 	
 	Il faudra définir les paramètres suivants:
-	\begin{itemize}
-	\item Ouverture du port 80, en TCP, avec ClusterIP, nom: http
-	\item Ouverture du port 443, en TCP, avec ClusterIP, nom: https
-	\end{itemize}
+	\begin{table}[H]
+		\begin{adjustwidth}{0cm}{0cm}
+			\centering
+			\begin{tabularx}{18cm}{|X|X|X|X|}
+				\hline
+				\cellcolor{gray!30} Port  & 
+				\cellcolor{gray!30} Protocole &
+				\cellcolor{gray!30} Type &
+				\cellcolor{gray!30} Nom \\
+				\hline
+				80 & TCP & ClusterIP & http\\
+				\hline
+				443 & TCP & ClusterIP & https\\
+				\hline
+			\end{tabularx}
+		\end{adjustwidth}
+	\end{table}
+	
+	Il faut par la suite définir des variables d'environnements pour que le serveur UI puisse communiquer avec le serveur registre.
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	NGINX_PROXY_PASS_URL: http://docker-registry:5000
@@ -801,9 +988,9 @@
 	\end{lstlisting}
 	
 	
-	\subsection{Phase 3: Création d'un Ingress avec HTTPS}
+	\subsection{Phase 4: Création d'un Ingress avec HTTPS}
 	
-	Docker, par défaut, refuse de communiquer avec une API/Serveur n'utilisant pas HTTPS ou n'ayant pas un certificat SSL valide. Il est plutôt aisé de mettre en place un service HTTPS avec Rancher/Kubernetes au moyen des \textbf{Ingress}.
+	Docker, par défaut, refuse de communiquer avec une API/Serveur n'utilisant pas HTTPS ou n'ayant pas un certificat SSL valide. Il est plutôt aisé de mettre en place un service HTTPS avec Rancher/Kubernetes au moyen des \textbf{Ingress}. Mais il sera de notre ressort de faire avec l'erreur de certificat auto-signé.
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	export KEY_FILE=key.pem
@@ -813,21 +1000,31 @@
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $KEY_FILE -out $CERT_FILE -subj "/CN=$HOST/O=$HOST" -addext "subjectAltName = DNS:$HOST"
 	\end{lstlisting}
 	
-	Une fois le certificat généré, il suffit d'aller dans la section Secret: Create > TLS Certificate et de renseigner la clé privée et le certificat.
+	Une fois le certificat généré, il suffit d'aller dans la section $\bullet$ Secret $\rightarrow$ Create $\rightarrow$ TLS Certificate et de renseigner la clé privée et le certificat.
 	
-	Maintenant, il faut aller dans \textbf{Service Discovery} -> Ingresses -> Create.
+	Maintenant, il faut aller dans $\bullet$ \textbf{Service Discovery} $\rightarrow$ Ingresses $\rightarrow$ Create.
 	
-	On peut renseigner les informations suivantes:
-	\begin{itemize}
-	\item Request Host: nailloux.registry.com
-	\item Service: docker-registry-ui on Port 80
-	\item HTTPS
-	\item Labels \& Annotations : "nginx.ingress.kubernetes.io/proxy-body-size" = 0 pour ne pas subir le 413 too large error.
-	\item Certificates : Secret Name, on déroule et sélectionne celui créé précédemment et met comme Domain Name: nailloux.registry.com
-	\end{itemize}
-	        
+	\begin{table}[H]
+		\begin{adjustwidth}{0cm}{0cm}
+			\centering
+			\begin{tabularx}{\textwidth}{|X|X|c|c|X|X|}
+				\hline
+				\cellcolor{gray!30} Request Host & 
+				\cellcolor{gray!30} Service  &
+				\cellcolor{gray!30} Port &
+				\cellcolor{gray!30} Label et Annotations &
+				\cellcolor{gray!30} \seqsplit{Certificats : Secret-Name} &
+				\cellcolor{gray!30} Certificats : Host \\
+				\hline
+				\seqsplit{nailloux.registry.com} & \seqsplit{docker-registry-ui} & 80 & \seqsplit{"nginx.ingress.kubernetes.io/proxy-body-size"} = 0
+				& registry.tls & \seqsplit{nailloux.registry.com} \\
+				\hline
+			\end{tabularx}
+		\end{adjustwidth}
+	\end{table}
 	
-	\subsection{Phase 4: Testing the Registry}
+
+	\subsection{Phase 5: Docker push}
 	
 	Maintenant il est possible de publier des images dans le registre en taggant les images de la manière suivante:
 	
@@ -846,6 +1043,8 @@
 	\includegraphics[width=18cm]{trusted-ca.png}
 	
 	\section{Cannot allocate new block due to per host block limit}
+	
+	Lorsque cette erreur survient c'est que calico ne dispose plus d'IPs restantes, ce qui est largement du à des IPs unitilisées n'étant pas recyclées. On peut forcer ce recyclage avec les commandes suivantes.
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	calicoctl datastore migrate lock
