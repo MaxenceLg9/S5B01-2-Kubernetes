@@ -119,29 +119,52 @@
 	\begin{itemize}
 	\item Rancher pour la gestion des clusters
 	\item RKE2 pour la mise en œuvre Kubernetes des nœuds de travail
-	\item k3s pour le cluster Rancher
+	\item k3s pour le cluster qui accueillera le déploiement Rancher
 	\item kubectl pour la gestion des ressources
 	\item Helm pour la gestion des applications
+	\item Calico pour la gestion du réseau et son outil calicoctl
 	\end{itemize}
 	
-	Plus tard, si nous avons le temps, nous utiliserons Ansible pour automiser la chaîne de production Rancher.
+	Plus tard, si nous avons le temps, nous utiliserons Ansible pour automiser la chaîne de production Rancher avec une pipeline Gitlab CI/CD.
 	
 	\section{Machines}
 	
 	Les machines utilisées au cours de ce projet seront:
 	
-	\begin{itemize}
-	\item applicatif $\Longrightarrow$ k3s cluster + Rancher Server
-	\item K8SA2 (k8s1) $\Longrightarrow$ RKE2 cluster + Master, Etcd, Worker Nodes
-	\item K8SB2 (k8s2) $\Longrightarrow$ RKE2 cluster + Worker nodes + Backup
-	\item K8SC2 (k8s3) $\Longrightarrow$ ???
-	\end{itemize}
+	\begin{table}[H]
+		\begin{adjustwidth}{0cm}{0cm}
+			\centering
+			\begin{tabularx}{18cm}{|X|X|X|X|c|}
+				\hline
+				\cellcolor{gray!30} Machine  & 
+				\cellcolor{gray!30} IP & 
+				\cellcolor{gray!30} Kubernetes &
+				\cellcolor{gray!30} Rôle &
+				\cellcolor{gray!30} Service\\
+				\hline
+				Applicatif & 10.0.1.3 & k3s & Master & Rancher Dashboard\\
+				\hline
+				K8SA2 & 10.0.1.4 & RKE2 Cluster & Master & Gitlab, Helm, Kube-System\\
+				\hline
+				K8SB2 & 10.0.1.5 & RKE2 Cluster & Worker & Gitlab, Docker Registry, local-path-provisioner, Nailloux-Front\\
+				\hline
+				K8SC2 & 10.0.1.6 & RKE2 Cluster & Worker & Docker-Registry, Gitlab, Gitlab-runner, Database\\
+				\hline
+			\end{tabularx}
+		\end{adjustwidth}
+	\end{table}
 	
 	\section{Configuration générale}
 	
+	Afin de pouvoir déployer efficacement notre cluster, nous devons configurer les machines correctement.
+	
 	\subsection{Nom de domaines}
 	
-	Dans toutes les VMs impliquées dans le cluster Kubernetes, la configuration suivante sera définie.
+	La première configuration réside dans le fait que rancher utilise un ingress, et donc pour accéder au service et aux endpoints API, il faut utiliser le nom de domaine et donc être en capacité de le résoudre.
+	
+	\subsubsection{Fichier temporaire /etc/hosts}
+	
+	Dans un premier temps, nous ferons cela via les fichiers /etc/hosts.
 	
 	\begin{lstlisting}[language=Bash,caption={/etc/hosts}]
 	10.0.1.3        rancher.rancher
@@ -150,12 +173,21 @@
 	10.0.1.6		gitlab.rancher nailloux.gitlab.com nailloux.registry.com
 	\end{lstlisting}
 	
-	Zone DNS avec unbound
+	\subsubsection{Zone DNS Unbound}
+	
+	Afin d'avoir une solution qualitative et évolutive, il est mieux de créer une zone DNS dans le service DNS approprié.
+	
+	Dans le fichier principal on ajoute:
 	
 	\begin{lstlisting}[language=Bash,caption={}]
+    include: "/etc/unbound/unbound.conf.d/*.conf"
+	\end{lstlisting}
+	
+	On crée un fichier nommée rancher.conf dans unbound.conf.d
+	\begin{lstlisting}[language=Bash,caption={/etc/unbound/unbound.conf.d/rancher.conf}]
 	server:
 		local-zone: "rancher." static
-		local-zone: "gitlab.com." static
+		local-zone: "nailloux.gitlab.com." redirect
 		local-zone: "registry.com." static
 	
 		local-data: "dns.rancher. IN A 10.0.1.2"
@@ -169,11 +201,20 @@
 		local-data: "nailloux.registry.com. IN A 10.0.1.4"
 	\end{lstlisting}
 	
+	A la base, je souhaitais faire des Canonical NAME afin d'avoir une configuration flexible.
+	Malheureusement le déploiement CoreDNS de Kubernetes supporte mal cette configuration et refuse de faire des requêtes DNS récursives.
+	
+	J'ai donc dû changer cela.
+	
 	\subsection{Contrôle des ressources}
 	
-	Pour monitorer les ressources des VMs, nous ne pouvons pas nous servir des indications données par Proxmox VM car le Guest Agent est désactivé. Nous aurons donc de mauvaises indications pour la RAM par exemple. Je conseille donc:
+	Kubernetes, de part la multitude d'applications que nous allons déployer sera très énergivore.
 	
-	\begin{lstlisting}[language=Bash,caption={}]
+	Au vu de la configuration des VMs et de la désactivation du guest agent, nous ne pouvons pas nous fier aux données affichées par Proxmox en termes de RAM.
+	
+	Je conseille donc l'outil simple en ligne de commande fastfetch.
+	
+	\begin{lstlisting}[language=Bash,caption={Installation de fastfetch}]
 	wget https://github.com/fastfetch-cli/fastfetch/releases/download/2.56.1/fastfetch-linux-amd64.deb && dpkg -i fastfetch-linux-amd64.deb
 	\end{lstlisting}
 	
@@ -186,8 +227,7 @@
 	
 	Exemple de tutorial: \href{https://blog.stephane-robert.info/docs/conteneurs/orchestrateurs/outils/rancher/}{Tutorial Rancher 2025}
 	
-	Faire le gitlab en tant qu'application kubernetes/rancher.
-	
+	Dans notre cas, nous avons décidé de l'installer en tant que déploiement k3s.	
 	
 	\section{Installation de k3s}
 	
@@ -195,13 +235,15 @@
 	curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.34.3+k3s1" sh -s - server --resolv-conf /run/systemd/resolve/resolv.conf
 	\end{lstlisting}
 	
-	Il est possible de définir les paramètres suivants mais ils sont susceptibles de générer des bugs
+	Il est possible de définir les paramètres suivants mais ils sont susceptibles de générer des bugs car nous avons deux interfaces sur les VMs et que celle locale n'est pas celle par défaut. Il vaut donc mieux ne pas définir ces options.
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	--bind-address 10.0.1.3 --advertise-address 10.0.1.3 --node-ip 10.0.1.3
 	\end{lstlisting}
 	
 	\subsection{Accès distant au cluster (Optionnel)}
+	
+	Si l'on veut se connecter au cluster avec un accès distant (sans SSH), on peut faire les manips suivantes. Je ne les ai pas testées mais je les ai mises au cas où.
 	
 	\verb*|<IP_OF_LINUX_MACHINE>| est l'IP de la machine distante sur laquelle se trouve le cluster.
 	
@@ -215,6 +257,8 @@
 	
 	\subsection{Installation d'helm}
 	
+	Helm est un gestionnaire de paquets (comme apt, pacmen, brew) pour Kubernetes. Il sera utile par la suite pour installer des applications en réduisant la complexité et surtout les erreurs.
+	
 	\begin{terminal}{}
 	sudo apt-get install curl gpg apt-transport-https --yes
 	
@@ -227,6 +271,8 @@
 	\end{terminal}
 	
 	\subsection{Installation de kubectl}
+	
+	Kubectl est l'outil de gestion de ressources kubernetes.
 	
 	\begin{terminal}{}
 	sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
@@ -244,6 +290,8 @@
 	
 	\subsection{Installation de Calicoctl}
 	
+	Calicoctl est l'outil pour gérer la ressource réseau calico.
+	
 	\begin{lstlisting}[language=Bash,caption={}]
 	curl -L https://github.com/projectcalico/calico/releases/download/v3.30.4/calicoctl-linux-amd64 -o calicoctl
 	
@@ -252,9 +300,14 @@
 	mv ./calicoctl /usr/bin/calicoctl
 	\end{lstlisting}
 	
-	\subsection{Création d'un Déploiement Rancher}
+	\subsection{Déploiement  de l'application Rancher sur le cluster k3s}
+	
+	Dans cette partie, nous allons voir comment installer Rancher sur le cluster k3s.
+	
+	Cela se fait avec Helm, comme cité précédemment.
 	
 	<Hostname> correspond au nom de domaine utilisé pour contacter le pod rancher.
+	<password> correspond au mot de passe pour se connecter.
 	
 	\begin{terminal}{Creation du pod Rancher avec Helm}
 	export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
@@ -280,7 +333,7 @@
 	  --namespace cattle-system \
 	  --set hostname=rancher.rancher \
 	  --set replicas=1 \
-	  --set bootstrapPassword=testpassword \
+	  --set bootstrapPassword=<password> \
 	  --set additionalTrustedCAs=true
 	\end{terminal}
 	
@@ -292,7 +345,7 @@
 	kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}{{"\n"}}'
 	\end{terminal}
 	
-	On définit un nouveau mot de passe qui est \verb*|qJHiA@wwaagi46U|.
+	On définit un nouveau mot de passe (si demandé) qui est \verb*|qJHiA@wwaagi46U|.
 	
 	\subsection{Pour arrêter/pauser Rancher}
 	
@@ -301,6 +354,14 @@
 	\end{terminal}
 	
 	Cela permet d'arrêter temporairement le pod Rancher.
+	
+	\subsection{Suppression de rancher}
+	
+	Etant donné que nous avons installé Rancher avec helm, la désinstallation se fait aussi avec.
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	helm delete --namespace cattle-system rancher
+	\end{lstlisting}
 	
 	\subsection{Ajout d'un certificat Root}
 	
@@ -317,7 +378,9 @@
 	systemctl restart k3s.service
 	\end{terminal}
 	
-	\chapter{Création d'un cluster}
+	\chapter{Création d'un cluster RKE2}
+	
+	Une fois l'installation de rancher faite, il faut maintenant créer un cluster et enrôler des machines afin d'avoir de la \textit{workforce}.
 	
 	\section{Enrôlement de machines}
 	
@@ -335,7 +398,7 @@
 	
 	\subsection{Ajout d'une mâchine Master}
 	
-	Pour cela catil faut aller dans la section \textbf{Clusters $\Longrightarrow$ <Cluster> $\Longrightarrow$ Registration}
+	Pour cela catil faut aller dans la section \textbf{Clusters $\rightarrow$ <Cluster> $\rightarrow$ Registration}
 	
 	\begin{lstlisting}[language=Bash,caption={Machine master}]
 	curl --insecure -fL https://rancher.rancher/system-agent-install.sh | sudo  sh -s - --server https://rancher.rancher --label 'cattle.io/os=linux' --token b6rh9zgx8m8jgwg6q6nm7h5frb7d6v87wgt8scppljfvqbvjt85kqk --ca-checksum b5ede295e2fdd2b453ae8cee700b60185f393914281b4bc90008c1e3f4eb8e5a --etcd --controlplane --worker --address 10.0.1.4 --internal-address 10.0.1.4
@@ -350,6 +413,8 @@
 	Si souci, il faut aller voir la section \hyperref[sec:dns]{Troubleshooting}.
 	
 	\chapter{Replication du Noeud Master}
+	
+	Partie non faite, bloat d'IA
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	In the context of RKE2/K3s (the tech stack you are currently using), "replicating" a master node means adding additional Control Plane + Etcd nodes to form a High Availability (HA) cluster.
@@ -424,13 +489,42 @@
 	
 	\chapter{Deploiement de l'application}
 	
-	Tout d'abord, avant de déployer quoi que ce soit il faut convertir le docker-compose.yml en fichier de déploiement Kubernetes, un manifest.
+	\section{Changement de spécification avec migration Docker à Kubernetes}
+	
+	Dans la phase 2, nous avions déployé une application docker au moyen d'un docker-compose.yml.
+	
+	Durant cette phase, nous devons la déployer avec Kubernetes, ce qui nécessite d'utiliser une spécification des ressources différentes à l'aide de manifests.yml.
+	
+	Nous pouvons effectuer une première approche de cette traduction avec l'outil kompose qui s'installe comme ceci:
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	curl -L https://github.com/kubernetes/kompose/releases/download/v1.38.0/kompose-linux-amd64 -o kompose
+	chmod +x kompose
+	sudo mv ./kompose /usr/local/bin/kompose
+	\end{lstlisting}
+	
+	On convertit donc notre docker-compose avec la commande suivante
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	kompose convert docker-compose.yaml
+	\end{lstlisting}
+	
+	De là va se créer un répertoire contenant tous les manifests mobilisés pour déployer l'application.
+	Il faudra bien évidemment les revisiter car ce n'est pas un outil magique. Notamment au niveau des volumes.
+	
+	\section{Stockage local de volumes Kubernetes}
+	
+	Dans notre situation, nous utilisons une solution locale avec un cluster local. Les données des volumes sont donc stockées sur les systèmes de fichiers des machines. Pour cela, il faut faire appel à un Provider capable de provisionner et de répondre à cette demande.
+	
+	C'est un déploiement Kubernetes à installer dans le cluster comme ceci:
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
 	
 	kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 	\end{lstlisting}
+	
+	La commande kubectl patch permet de définir la classe de stockage comme par défaut.
 	
 	\chapter{Déploiement de composants annexes}
 	
@@ -645,6 +739,13 @@
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	helm delete --namespace gitlab-runner gitlab-runner
+	\end{lstlisting}
+	
+	\section{LoadBalancer avec MetalLB}
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	helm repo add metallb https://metallb.github.io/metallb
+	helm install metallb metallb/metallb
 	\end{lstlisting}
 	
 	\section{Docker Registry}

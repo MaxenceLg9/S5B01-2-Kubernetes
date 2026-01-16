@@ -4,6 +4,8 @@
 \contentsline {section}{\numberline {I.B}Machines}{3}{section.1.2}%
 \contentsline {section}{\numberline {I.C}Configuration générale}{3}{section.1.3}%
 \contentsline {subsection}{\numberline {I.C.1}Nom de domaines}{3}{subsection.1.3.1}%
+\contentsline {subsubsection}{\numberline {I.C.1.a}Fichier temporaire /etc/hosts}{4}{subsubsection.1.3.1.1}%
+\contentsline {subsubsection}{\numberline {I.C.1.b}Zone DNS Unbound}{4}{subsubsection.1.3.1.2}%
 \contentsline {subsection}{\numberline {I.C.2}Contrôle des ressources}{4}{subsection.1.3.2}%
 \contentsline {chapter}{\numberline {II}Installation de Rancher dans un cluster k3s}{5}{chapter.2}%
 \contentsline {section}{\numberline {II.A}Installation de k3s}{5}{section.2.1}%
@@ -11,17 +13,20 @@
 \contentsline {subsection}{\numberline {II.A.2}Installation d'helm}{5}{subsection.2.1.2}%
 \contentsline {subsection}{\numberline {II.A.3}Installation de kubectl}{6}{subsection.2.1.3}%
 \contentsline {subsection}{\numberline {II.A.4}Installation de Calicoctl}{6}{subsection.2.1.4}%
-\contentsline {subsection}{\numberline {II.A.5}Création d'un Déploiement Rancher}{6}{subsection.2.1.5}%
+\contentsline {subsection}{\numberline {II.A.5}Déploiement de l'application Rancher sur le cluster k3s}{6}{subsection.2.1.5}%
 \contentsline {subsection}{\numberline {II.A.6}Pour arrêter/pauser Rancher}{7}{subsection.2.1.6}%
-\contentsline {subsection}{\numberline {II.A.7}Ajout d'un certificat Root}{7}{subsection.2.1.7}%
+\contentsline {subsection}{\numberline {II.A.7}Suppression de rancher}{7}{subsection.2.1.7}%
+\contentsline {subsection}{\numberline {II.A.8}Ajout d'un certificat Root}{7}{subsection.2.1.8}%
 \contentsline {section}{\numberline {II.B}Réinitialisation du cluster}{7}{section.2.2}%
-\contentsline {chapter}{\numberline {III}Création d'un cluster}{8}{chapter.3}%
+\contentsline {chapter}{\numberline {III}Création d'un cluster RKE2}{8}{chapter.3}%
 \contentsline {section}{\numberline {III.A}Enrôlement de machines}{8}{section.3.1}%
 \contentsline {subsection}{\numberline {III.A.1}Variables d'environnement}{8}{subsection.3.1.1}%
 \contentsline {subsection}{\numberline {III.A.2}Ajout d'une mâchine Master}{8}{subsection.3.1.2}%
 \contentsline {subsection}{\numberline {III.A.3}Ajout d'une machine Worker only}{8}{subsection.3.1.3}%
 \contentsline {chapter}{\numberline {IV}Replication du Noeud Master}{9}{chapter.4}%
 \contentsline {chapter}{\numberline {V}Deploiement de l'application}{11}{chapter.5}%
+\contentsline {section}{\numberline {V.A}Changement de spécification avec migration Docker à Kubernetes}{11}{section.5.1}%
+\contentsline {section}{\numberline {V.B}Stockage local de volumes Kubernetes}{11}{section.5.2}%
 \contentsline {chapter}{\numberline {VI}Déploiement de composants annexes}{12}{chapter.6}%
 \contentsline {section}{\numberline {VI.A}Gitlab}{12}{section.6.1}%
 \contentsline {subsection}{\numberline {VI.A.1}Phase 1: Creation des volumes}{12}{subsection.6.1.1}%
@@ -35,14 +40,16 @@
 \contentsline {subsection}{\numberline {VI.A.4}Phase 4: Attente}{13}{subsection.6.1.4}%
 \contentsline {subsection}{\numberline {VI.A.5}Phase 5: Création d'une redirection de paquets avec un Ingress}{13}{subsection.6.1.5}%
 \contentsline {subsection}{\numberline {VI.A.6}Phase 6: Récupération du mot de passe}{13}{subsection.6.1.6}%
-\contentsline {section}{\numberline {VI.B}Gitlab runner}{14}{section.6.2}%
-\contentsline {section}{\numberline {VI.C}Docker Registry}{14}{section.6.3}%
-\contentsline {subsection}{\numberline {VI.C.1}Phase 1: Creation des PVC}{14}{subsection.6.3.1}%
-\contentsline {subsection}{\numberline {VI.C.2}Phase 2: Deploiement des pods}{15}{subsection.6.3.2}%
-\contentsline {subsection}{\numberline {VI.C.3}UI}{15}{subsection.6.3.3}%
-\contentsline {subsection}{\numberline {VI.C.4}Phase 3: Création d'un Ingress avec HTTPS}{15}{subsection.6.3.4}%
-\contentsline {subsection}{\numberline {VI.C.5}Phase 4: Testing the Registry}{16}{subsection.6.3.5}%
-\contentsline {chapter}{\numberline {VII}Troubleshooting}{17}{chapter.7}%
-\contentsline {section}{\numberline {VII.A}Problème de certificats SSL}{17}{section.7.1}%
-\contentsline {section}{\numberline {VII.B}Cannot allocate new block due to per host block limit}{17}{section.7.2}%
-\contentsline {section}{\numberline {VII.C}DNS}{17}{section.7.3}%
+\contentsline {section}{\numberline {VI.B}Gitlab avec Helm}{14}{section.6.2}%
+\contentsline {section}{\numberline {VI.C}Gitlab runner}{15}{section.6.3}%
+\contentsline {section}{\numberline {VI.D}LoadBalancer avec MetalLB}{15}{section.6.4}%
+\contentsline {section}{\numberline {VI.E}Docker Registry}{15}{section.6.5}%
+\contentsline {subsection}{\numberline {VI.E.1}Phase 1: Creation des PVC}{16}{subsection.6.5.1}%
+\contentsline {subsection}{\numberline {VI.E.2}Phase 2: Deploiement des pods}{16}{subsection.6.5.2}%
+\contentsline {subsection}{\numberline {VI.E.3}UI}{16}{subsection.6.5.3}%
+\contentsline {subsection}{\numberline {VI.E.4}Phase 3: Création d'un Ingress avec HTTPS}{16}{subsection.6.5.4}%
+\contentsline {subsection}{\numberline {VI.E.5}Phase 4: Testing the Registry}{17}{subsection.6.5.5}%
+\contentsline {chapter}{\numberline {VII}Troubleshooting}{18}{chapter.7}%
+\contentsline {section}{\numberline {VII.A}Problème de certificats SSL}{18}{section.7.1}%
+\contentsline {section}{\numberline {VII.B}Cannot allocate new block due to per host block limit}{18}{section.7.2}%
+\contentsline {section}{\numberline {VII.C}DNS}{18}{section.7.3}%
