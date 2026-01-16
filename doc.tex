@@ -150,6 +150,25 @@
 	10.0.1.6		gitlab.rancher nailloux.gitlab.com nailloux.registry.com
 	\end{lstlisting}
 	
+	Zone DNS avec unbound
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	server:
+		local-zone: "rancher." static
+		local-zone: "gitlab.com." static
+		local-zone: "registry.com." static
+	
+		local-data: "dns.rancher. IN A 10.0.1.2"
+		local-data: "rancher.rancher. IN A 10.0.1.3"
+		local-data: "master.rancher. IN A 10.0.1.4"
+		local-data: "worker.rancher. IN A 10.0.1.5"
+		local-data: "gitlab.rancher. IN A 10.0.1.6"
+	#	local-data: "nailloux.gitlab.com. IN CNAME gitlab.rancher."
+		local-data: "nailloux.gitlab.com. IN A 10.0.1.4"
+	#	local-data: "nailloux.registry.com. IN CNAME gitlab.rancher."
+		local-data: "nailloux.registry.com. IN A 10.0.1.4"
+	\end{lstlisting}
+	
 	\subsection{Contrôle des ressources}
 	
 	Pour monitorer les ressources des VMs, nous ne pouvons pas nous servir des indications données par Proxmox VM car le Guest Agent est désactivé. Nous aurons donc de mauvaises indications pour la RAM par exemple. Je conseille donc:
@@ -521,29 +540,112 @@
 	
 	Une fois que le serveur Gitlab est lancé, (environ 5 minutes), on peut récupérer le mot de passe généré par défaut comme ceci:
 	
-	 \begin{lstlisting}[language=,caption={}]
-	 root@k8sc2:~# kubectl get pods
-	 NAME                      READY   STATUS    RESTARTS   AGE
-	 gitlab-54d7466479-vcd9w   1/1     Running   0          18m
-	 root@k8sc2:~# kubectl exec gitlab-54d7466479-vcd9w -- cat /etc/gitlab/initial_root_password
-	 # WARNING: This password is only valid if ALL of the following are true:
-	 #          • You set it manually via the GITLAB_ROOT_PASSWORD environment variable
-	 #            OR the gitlab_rails['initial_root_password'] setting in /etc/gitlab/gitlab.rb
-	 #          • You set it BEFORE the initial database setup (typically during first installation)
-	 #          • You have NOT changed the password since then (via web UI or command line)
-	 #
-	 #          If this password doesn't work, reset the admin password using:
-	 #          https://docs.gitlab.com/security/reset_user_password/#reset-the-root-password
+	\begin{lstlisting}[language=,caption={}]
+	root@k8sc2:~# kubectl get pods
+	NAME                      READY   STATUS    RESTARTS   AGE
+	gitlab-54d7466479-vcd9w   1/1     Running   0          18m
+	root@k8sc2:~# kubectl exec gitlab-54d7466479-vcd9w -- cat /etc/gitlab/initial_root_password
+	# WARNING: This password is only valid if ALL of the following are true:
+	#          • You set it manually via the GITLAB_ROOT_PASSWORD environment variable
+	#            OR the gitlab_rails['initial_root_password'] setting in /etc/gitlab/gitlab.rb
+	#          • You set it BEFORE the initial database setup (typically during first installation)
+	#          • You have NOT changed the password since then (via web UI or command line)
+	#
+	#          If this password doesn't work, reset the admin password using:
+	#          https://docs.gitlab.com/security/reset_user_password/#reset-the-root-password
 	 
-	 Password: JKk4H/BOVuXOFgi899ZRsN4HBnLzmWLQAveH0kmtAyE=
+	Password: JKk4H/BOVuXOFgi899ZRsN4HBnLzmWLQAveH0kmtAyE=
 	 
-	 # NOTE: This file is automatically deleted after 24 hours on the next reconfigure run.
-	 \end{lstlisting}
+	# NOTE: This file is automatically deleted after 24 hours on the next reconfigure run.
+	\end{lstlisting}
 	 
-	 Pour interagir avec le pod:
-	 \begin{lstlisting}[language=Bash,caption={}]
-	 kubectl exec -it gitlab-54d7466479-vcd9w -- bash
-	 \end{lstlisting}
+	Pour interagir avec le pod:
+	\begin{lstlisting}[language=Bash,caption={}]
+	kubectl exec -it gitlab-54d7466479-vcd9w -- bash
+	\end{lstlisting}
+	
+	\section{Gitlab avec Helm}
+	
+	Dans cette section nous verrons comment installer gitlab avec helm.
+	
+	
+	\begin{lstlisting}[language=Bash,caption={values.yaml}]
+	global:
+	  hosts:
+	    domain: nailloux.gitlab.com  # Your domain
+	    gitlab:
+	      name: nailloux.gitlab.com
+	    externalIP: 10.0.1.4
+	  ingress:
+	    configureCertmanager: true
+	  # If you want to use your existing external PostgreSQL/Redis, configure here.
+	  # Otherwise, it will install them inside the cluster.
+	
+	certmanager-issuer:
+	  email: root@nailloux.lan
+	
+	gitlab:
+	  webservice:
+	    # This solves your previous "unmapped file" error
+	    extraVolumes:
+	      - name: dshm
+	        emptyDir:
+	          medium: Memory
+	    extraVolumeMounts:
+	      - name: dshm
+	        mountPath: /dev/shm
+	    resources:
+	      requests:
+	        memory: 4Gi
+	      limits:
+	        memory: 8Gi
+	\end{lstlisting}
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	helm repo add gitlab https://charts.gitlab.io/
+	
+	kubectl create namespace gitlab
+	
+	helm repo update
+	helm upgrade --install gitlab gitlab/gitlab \
+	  --timeout 600s \
+	  --set global.hosts.externalIP=10.0.1.4 \
+	  --set global.edition=ce \
+	  --namespace gitlab \
+	  -f values.yaml
+	\end{lstlisting}
+	
+	Pour récupérer le mot de passe:
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	kubectl get secret <name>-gitlab-initial-root-password -ojsonpath='{.data.password}' | base64 --decode ; echo
+	\end{lstlisting}
+	 
+	\section{Gitlab runner}
+	 
+	Afin de pouvoir exécuter la pipeline CI/CD il faut installer ce qu'on appelle un runner, un processus capable d'exécuter les jobs.
+	 
+	Nous allons utiliser le gestionnaire de paquets kubernetes \textbf{helm}.
+	
+	Il faut d'ailleurs créer un fichier values.yaml.
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	kubectl create namespace gitlab-runner
+	
+	kubectl create secret generic runner-secret \
+	  --from-literal=runner-registration-token="glrt-_amtT5NiPBnvwO7U6niGBG86MQpwOjEKdDozCnU6MQ8.01.170ht4ipd" \
+	  -n gitlab-runner
+	  
+	helm repo add gitlab https://charts.gitlab.io
+	helm repo update
+	helm install --namespace gitlab-runner gitlab-runner -f values.yaml gitlab/gitlab-runner
+	\end{lstlisting}
+	
+	Pour le désinstaller
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	helm delete --namespace gitlab-runner gitlab-runner
+	\end{lstlisting}
 	
 	\section{Docker Registry}
 	

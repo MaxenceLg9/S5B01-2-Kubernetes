@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2026/dev/Arch Linux) (preloaded format=xelatex 2026.1.4)  13 JAN 2026 16:51
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2026/dev/Arch Linux) (preloaded format=xelatex 2026.1.4)  15 JAN 2026 15:39
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1211,6 +1211,8 @@ File: lstlang1.sty 2024/09/23 1.10c listings language file
 )
 Package hyperref Info: bookmark level for unknown lstlisting defaults to 0 on i
 nput line 146.
+LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <9> not available
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 157.
 
 
 [3
@@ -1219,8 +1221,6 @@ nput line 146.
 
 [4]
 Chapitre II.
-LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <9> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 182.
 
 
 [5
@@ -1228,7 +1228,7 @@ LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <9> not available
 ]
 
 [6]
-Overfull \hbox (33.78896pt too wide) in paragraph at lines 268--270
+Overfull \hbox (33.78896pt too wide) in paragraph at lines 287--289
 []\TU/Calibri(0)/m/n/10 Il faut maintenant attendre car l’installation nécessit
 e quelques minutes. On peut vérifier avec []\TU/lmtt/m/n/10 kubectl[]get[]pods[
 ]-n[]cattle-system 
@@ -1267,7 +1267,7 @@ Chapitre VI.
 [13]
 
 [14]
-Overfull \hbox (32.51044pt too wide) in paragraph at lines 623--624
+Overfull \hbox (32.51044pt too wide) in paragraph at lines 668--669
 []\TU/Calibri(0)/m/n/10 Certificates : Secret Name, on déroule et sélectionne c
 elui créé précédemment et met comme Domain Name : nailloux.registry.com 
  []
@@ -1275,17 +1275,19 @@ elui créé précédemment et met comme Domain Name : nailloux.registry.com
 
 
 [15]
+
+[16]
 Chapitre VII.
 File: trusted-ca.png Graphic file (type bmp)
 <trusted-ca.png>
 
 
-[16
+[17
 
 ]
 
-[17]
-runsystem(latexminted cleantemp  --timestamp 20260113165147 9A09B4DFDA82E3E665E
+[18]
+runsystem(latexminted cleantemp  --timestamp 20260115153902 9A09B4DFDA82E3E665E
 31092D1C3EC8D)...executed safely (allowed).
 
  (./doc.aux)
@@ -1294,15 +1296,15 @@ LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
 Package rerunfilecheck Info: File `doc.out' has not changed.
-(rerunfilecheck)             Checksum: 8870AFD002EC33BB7AD6941D10189CBC;8705.
+(rerunfilecheck)             Checksum: A1CD6A1BC5975B38A9B5D466F6152C12;8828.
  ) 
 Here is how much of TeX's memory you used:
- 35656 strings out of 475874
- 728794 string characters out of 5776791
+ 35670 strings out of 475874
+ 728947 string characters out of 5776791
  1646182 words of memory out of 5000000
- 58024 multiletter control sequences out of 15000+600000
+ 58038 multiletter control sequences out of 15000+600000
  596793 words of font info for 136 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  95i,9n,101p,481b,1862s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on doc.pdf (18 pages).
+Output written on doc.pdf (19 pages).

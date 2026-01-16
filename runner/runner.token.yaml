@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  runner-token: Z2xydC1mTkhIVnhhRExYUDB0VWo3V2hWaUUyODZNUXB3T2pJS2REb3pDblU2TVE4LjAxLjE3MGdkaTc3NQo=
+  runner-registration-token: Z2xydC1mTkhIVnhhRExYUDB0VWo3V2hWaUUyODZNUXB3T2pJS2REb3pDblU2TVE4LjAxLjE3MGdkaTc3NQo=
+kind: Secret
+metadata:
+  name: gitlab-runner-token
+  namespace: gitlab-runner
+type: Opaque
