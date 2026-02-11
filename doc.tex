@@ -313,30 +313,26 @@
 	\begin{terminal}{Creation du pod Rancher avec Helm}
 	export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 	
-
-	
 	kubectl create namespace cattle-system 
 	kubectl config set-context --current --namespace=cattle-system 
 	
-	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.crds.yaml
-	
-	helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+	helm repo add rancher-stable https://releases.rancher.com/server-charts/stable
 	
 	helm repo add jetstack https://charts.jetstack.io
 	
 	helm repo update
 	
 	helm install cert-manager jetstack/cert-manager \
-	  --namespace cert-manager \
-	  --create-namespace
-	  
-	helm install rancher rancher-latest/rancher \
-	  --namespace cattle-system \
-	  --set hostname=rancher.rancher \
-	  --set replicas=1 \
-	  --set bootstrapPassword=<password> \
-	  --set additionalTrustedCAs=true
-	\end{terminal}
+	--namespace cert-manager \
+	--create-namespace \
+	--set crds.enabled=true
+	
+	helm install rancher rancher-stable/rancher \
+	--namespace cattle-system \
+	--replicas 1
+	--set hostname=rancher.rancher \
+	--set bootstrapPassword=oscar
+		\end{terminal}
 	
 	Il faut maintenant attendre car l'installation nécessite quelques minutes.
 	On peut vérifier avec \verb*|kubectl get pods -n cattle-system|
