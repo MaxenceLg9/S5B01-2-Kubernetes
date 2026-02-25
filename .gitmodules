@@ -1,3 +1,6 @@
 [submodule "app"]
 	path = app
 	url = git@github.com:MaxenceLg9/S5B01-2-Kubernetes-App.git
+[submodule "registry"]
+	path = registry
+	url = git@github.com:MaxenceLg9/K8S-Docker_Registry_UI_Backend.git
